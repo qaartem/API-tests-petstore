@@ -1,4 +1,7 @@
 import io.restassured.RestAssured;
+import org.example.model.Pet;
+import org.example.requests.PetRequest;
+import org.example.spec.RequestSpec;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -14,51 +17,58 @@ public class ApiTests {
         RestAssured.baseURI = BASE_URL;
     }
 
-    @Test
+    @Test(priority = 1)
     public void testCreatePet() {
+
+        PetRequest petRequest = new PetRequest(null);
+
         Specifications.installSpecification(Specifications.requestSpec(BASE_URL), Specifications.responseSpecOK200());
 
-        Integer id = 1;
+        int id = 1;
         String name = "name";
-        String status = "status";
+        String status = "available";
 
-        CreatePet pet = new CreatePet(1, "name", "status");
+        Pet newPet = new Pet(1, "name", "available");
 
-        CreatedPet createPetResponse = given().
-                body(pet)
-                .when()
-                .post("/pet")
+        CreatedPet createPetResponse = petRequest.create(newPet)
+//        CreatedPet createPetResponse = given()
+//                .body(pet)
+//                .when()
+//                .post("/pet")
                 .then().log().all()
                 .extract()
                 .as(CreatedPet.class);
 
-        Assert.assertEquals(id, createPetResponse.getId());
-        Assert.assertEquals(name, createPetResponse.getName());
-        Assert.assertEquals(status, createPetResponse.getStatus());
+        Assert.assertEquals(createPetResponse.getId(), id);
+        Assert.assertEquals(createPetResponse.getName(), name);
+        Assert.assertEquals(createPetResponse.getStatus(), status);
     }
 
-    @Test
-    public void TestGetPet() {
+    @Test(priority = 2)
+    public void testGetPet() {
         Specifications.installSpecification(Specifications.requestSpec(BASE_URL), Specifications.responseSpecOK200());
+        PetRequest petRequest = new PetRequest(null);
 
-        Integer id = 1;
-        String status = "status";
 
-        CreatedPet getPetResponse = given()
-                .when()
-                .get("/pet/" + id)
+        int id = 1;
+        String status = "available";
+
+        CreatedPet getPetResponse = petRequest.read(id)
+//        CreatedPet getPetResponse = given()
+//                .when()
+//                .get("/pet/" + id)
                 .then().log().all()
                 .extract()
                 .as(CreatedPet.class);
 
-        Assert.assertEquals(id, getPetResponse.getId());
-        Assert.assertEquals(status, getPetResponse.getStatus());
+        Assert.assertEquals(getPetResponse.getId(), id);
+        Assert.assertEquals(getPetResponse.getStatus(), status);
     }
 
-    @Test
-    public void TestDeletePet() {
+    @Test(priority = 3)
+    public void testDeletePet() {
 
-        Integer id = 1;
+        int id = 1;
 
         given()
                 .when()
@@ -68,10 +78,10 @@ public class ApiTests {
                 .body("message", equalTo(String.valueOf(id)));
     }
 
-    @Test
-    public void checkThatPetIsDeleted() {
+    @Test(priority = 4)
+    public void testCheckThatPetIsDeleted() {
         Specifications.installSpecification(Specifications.requestSpec(BASE_URL), Specifications.responseSpecError404());
-        Integer id = 1;
+        int id = 1;
 
         given()
                 .when()
